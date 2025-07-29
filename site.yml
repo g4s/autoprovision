@@ -1,0 +1,37 @@
+# SPDX-License-Identifier BSD-3-Clause
+#
+# author(s): 
+#   Gregor A. Segner gregor.segner@gmail.com
+#
+# license: BSD 3-Clause
+# Copyright (c) 2025
+#
+# brief:
+#   simple playbook used in auto-deploys in conjunction with ansible-pull
+#
+# description:
+#   This should be used in conjunction with ansible-pull in some cases of
+#   automated deployments of fresh installed machines. The primary use of
+#   this playbook is to invoke roles, which do the most of the magic.
+#   For invocation you cann use:
+#
+#   $:> ansible-pull -U https://github.com/g4s/autoprovision.git -c local
+---
+
+- hosts: *
+  roles:
+    - role: de.seafi.minimalinstall
+      vars:
+  tasks:
+    - name: remove autoprovision signal on host
+      block:
+        - ansible.builtin.stat:
+            path: /auto-provision
+          register: provisionstate
+
+        - ansible.builtin.path:
+            path: /auto-provision
+            state: absent
+          become: True
+          when: provisionstate.stat.exists
+      when: ansible_os_family != "Windows"
